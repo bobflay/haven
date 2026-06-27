@@ -14,10 +14,10 @@ class ApiException implements Exception {
 /// Thin wrapper around the Laravel API. Holds the bearer token and exposes a
 /// typed method per endpoint.
 class ApiService {
-  /// Where the Laravel `php artisan serve` instance lives. Override with
-  /// `--dart-define=HAVEN_API_BASE=...` for other hosts.
+  /// The Haven API host. Override with `--dart-define=HAVEN_API_BASE=...`
+  /// (e.g. `http://127.0.0.1:8000/api` when running the backend locally).
   static const String baseUrl =
-      String.fromEnvironment('HAVEN_API_BASE', defaultValue: 'http://127.0.0.1:8000/api');
+      String.fromEnvironment('HAVEN_API_BASE', defaultValue: 'https://haven.xpertbot.online/api');
 
   String? token;
 

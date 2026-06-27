@@ -48,13 +48,15 @@ class HomeShell extends StatelessWidget {
       HavenScreen.chat => const ChatScreen(),
     };
 
-    return Stack(
-      children: [
-        Positioned.fill(child: screen),
-        if (nav.showTabs)
-          const Positioned(left: 0, right: 0, bottom: 0, child: _BottomNav()),
-        if (nav.menuOpen) const _DrawerOverlay(),
-      ],
+    return CenteredContent(
+      child: Stack(
+        children: [
+          Positioned.fill(child: screen),
+          if (nav.showTabs)
+            const Positioned(left: 0, right: 0, bottom: 0, child: _BottomNav()),
+          if (nav.menuOpen) const _DrawerOverlay(),
+        ],
+      ),
     );
   }
 }

@@ -72,7 +72,11 @@ class _AuthGateState extends State<AuthGate> {
           stops: [0.0, 0.62, 1.0],
         ),
       ),
-      child: signup ? _buildSignup(context) : _buildLogin(context),
+      // Gradient fills the full viewport; the form stays a centred, readable column.
+      child: CenteredContent(
+        maxWidth: 460,
+        child: signup ? _buildSignup(context) : _buildLogin(context),
+      ),
     );
   }
 

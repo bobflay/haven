@@ -208,9 +208,10 @@ class _Bubble extends StatelessWidget {
                       size: 14.5,
                       height: 1.45,
                       color: user ? HavenColors.cream : HavenColors.ink)),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

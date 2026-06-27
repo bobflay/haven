@@ -4,42 +4,63 @@ import 'package:flutter/material.dart';
 
 import '../theme/haven_theme.dart';
 
-/// The app shell. The UI fills the whole browser window: full viewport height,
-/// with the content held in a centred column capped at [maxWidth] so the
-/// mobile-first layout stays readable on wide desktops. (Formerly a phone
-/// mockup — the device bezel and status bar have been removed.)
+/// The app shell. The UI fills the whole browser window edge-to-edge. Each
+/// screen draws its own full-bleed background; the readable content inside is
+/// centred and width-limited by [contentWidth] so it scales with the screen
+/// rather than stretching mobile cards across a 4K monitor.
 class PhoneFrame extends StatelessWidget {
   const PhoneFrame({super.key, required this.child});
   final Widget child;
 
-  /// Design reference width (used for a few relative sizings).
-  static const double screenW = 390;
+  /// Design reference height (used for the auth screens' min height).
   static const double screenH = 844;
 
-  /// Content never grows wider than this; below it, the app is full-bleed.
-  static const double maxWidth = 480;
+  /// A responsive content width: full-bleed on phones, then scaling up with the
+  /// viewport but bounded so mobile-style cards stay readable on big displays.
+  static double contentWidth(double viewportWidth) {
+    if (viewportWidth < 600) return viewportWidth;
+    return (viewportWidth * 0.58).clamp(600.0, 860.0);
+  }
 
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
       color: HavenColors.cream,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = math.min(constraints.maxWidth, maxWidth);
-          return Center(
-            child: SizedBox(
-              width: width,
-              height: constraints.maxHeight,
-              // A transparent Material gives every screen the Material ancestor
-              // that TextField needs, plus the proper default text style.
-              child: Material(
-                type: MaterialType.transparency,
-                child: child,
-              ),
-            ),
-          );
-        },
+      // A transparent Material gives every screen the Material ancestor that
+      // TextField needs, plus the proper default text style.
+      child: Material(
+        type: MaterialType.transparency,
+        child: child,
       ),
+    );
+  }
+}
+
+/// Centres a screen's readable content and caps its width responsively, while
+/// the screen's background fills the full viewport behind it.
+class CenteredContent extends StatelessWidget {
+  const CenteredContent({super.key, required this.child, this.maxWidth});
+
+  final Widget child;
+
+  /// Override the responsive width with a fixed cap (used by the auth forms).
+  final double? maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = maxWidth != null
+            ? math.min(constraints.maxWidth, maxWidth!)
+            : PhoneFrame.contentWidth(constraints.maxWidth);
+        return Center(
+          child: SizedBox(
+            width: width,
+            height: constraints.maxHeight,
+            child: child,
+          ),
+        );
+      },
     );
   }
 }
