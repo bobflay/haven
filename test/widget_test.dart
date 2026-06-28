@@ -2,9 +2,24 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:haven_app/models/constants.dart';
+import 'package:haven_app/models/content.dart';
 import 'package:haven_app/models/models.dart';
 import 'package:haven_app/theme/haven_theme.dart';
+
+/// A small slice of the `GET /content` payload, enough to exercise the helpers.
+final _content = AppContent.fromJson({
+  'states': [
+    {'code': 'HW', 'label': 'Wired', 'desc': 'Mind racing, body moving.', 'color': '#C08A72'},
+    {'code': 'RF', 'label': 'Restless Fog', 'desc': 'Body twitchy, brain empty.', 'color': '#8198AD'},
+    {'code': 'TZ', 'label': 'Trapped', 'desc': "Body dead tired.", 'color': '#9B8AA8'},
+    {'code': 'FC', 'label': 'Flatline', 'desc': 'Total system shutdown.', 'color': '#7A8893'},
+  ],
+  'intensity_bands': [
+    {'max': 3, 'label': 'Low', 'color': '#7C9885'},
+    {'max': 6, 'label': 'Moderate', 'color': '#BCA06A'},
+    {'max': 10, 'label': 'Severe', 'color': '#C08A72'},
+  ],
+});
 
 void main() {
   test('Entry.fromJson parses the API shape', () {
@@ -59,17 +74,17 @@ void main() {
   });
 
   test('intensity colour bands match the design', () {
-    expect(intColorFor(3), HavenColors.sage);
-    expect(intColorFor(5), HavenColors.amber);
-    expect(intColorFor(9), HavenColors.clay);
-    expect(intBandFor(2), 'Low');
-    expect(intBandFor(5), 'Moderate');
-    expect(intBandFor(8), 'Severe');
+    expect(_content.intColor(3), HavenColors.sage);
+    expect(_content.intColor(5), HavenColors.amber);
+    expect(_content.intColor(9), HavenColors.clay);
+    expect(_content.intBand(2), 'Low');
+    expect(_content.intBand(5), 'Moderate');
+    expect(_content.intBand(8), 'Severe');
   });
 
   test('stateMeta resolves energy-state codes', () {
-    expect(stateMeta('HW').label, 'Wired');
-    expect(stateMeta('FC').color, HavenColors.slate);
+    expect(_content.stateMeta('HW').label, 'Wired');
+    expect(_content.stateMeta('FC').color, HavenColors.slate);
   });
 
   test('Mood.withKey updates immutably', () {

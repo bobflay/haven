@@ -1,26 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/constants.dart';
 import '../services/api_service.dart';
+import '../state/data_store.dart';
 import '../theme/haven_theme.dart';
 import '../widgets/fade_up.dart';
 import '../widgets/haven_widgets.dart';
 import '../utils/download.dart';
 import 'deep_scaffold.dart';
-
-const _formats = [
-  ('Summary report', 'A readable .txt overview'),
-  ('Spreadsheet (CSV)', 'Rows for every logged moment'),
-];
-
-const _included = [
-  'Daily craving logs',
-  'Intensity & duration',
-  'Energy states',
-  'Emotional ratings',
-  'Sleep & coping outcomes',
-];
 
 class ExportScreen extends StatefulWidget {
   const ExportScreen({super.key});
@@ -60,6 +47,8 @@ class _ExportScreenState extends State<ExportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final content = context.read<DataStore>().content;
+    final ranges = content.exportRanges;
     return DeepScaffold(
       title: 'Export data',
       children: [
@@ -70,7 +59,7 @@ class _ExportScreenState extends State<ExportScreen> {
         const SizedBox(height: 11),
         Row(
           children: [
-            for (final r in kExportRanges) ...[
+            for (final r in ranges) ...[
               Expanded(
                 child: _ChoiceTile(
                   label: r,
@@ -81,21 +70,21 @@ class _ExportScreenState extends State<ExportScreen> {
                   }),
                 ),
               ),
-              if (r != kExportRanges.last) const SizedBox(width: 9),
+              if (r != ranges.last) const SizedBox(width: 9),
             ],
           ],
         ),
         const SizedBox(height: 24),
         Eyebrow('Format'),
         const SizedBox(height: 11),
-        ..._formats.map((f) => Padding(
+        ...content.exportFormats.map((f) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: _FormatTile(
-                label: f.$1,
-                desc: f.$2,
-                selected: format == f.$1,
+                label: f.title,
+                desc: f.desc,
+                selected: format == f.title,
                 onTap: () => setState(() {
-                  format = f.$1;
+                  format = f.title;
                   result = null;
                 }),
               ),
@@ -109,7 +98,7 @@ class _ExportScreenState extends State<ExportScreen> {
               Text('Included',
                   style: hank(size: 12.5, weight: FontWeight.w600, color: const Color(0xFF5A544B))),
               const SizedBox(height: 9),
-              ..._included.map((it) => Padding(
+              ...content.exportIncluded.map((it) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 3),
                     child: Row(
                       children: [

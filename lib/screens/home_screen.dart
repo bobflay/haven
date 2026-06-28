@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../models/constants.dart';
 import '../state/auth_state.dart';
 import '../state/data_store.dart';
 import '../state/nav_state.dart';
@@ -27,7 +26,7 @@ class HomeScreen extends StatelessWidget {
     final dateStr = DateFormat('EEEE, MMMM d').format(now);
 
     final last = store.lastEntry;
-    final lastMeta = last != null ? stateMeta(last.state) : null;
+    final lastMeta = last != null ? store.content.stateMeta(last.state) : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 64, 20, 108),

@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
-import '../models/constants.dart';
+import '../models/content.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../theme/haven_theme.dart';
@@ -64,6 +64,10 @@ class DataStore extends ChangeNotifier {
   List<CrisisContact> crisisContacts = [];
   List<ChatMessage> chat = [];
 
+  /// Reference copy + form options served by the API. Non-null once [loadAll]
+  /// completes (the shell gates every screen behind [loading] until then).
+  late AppContent content;
+
   bool loading = true;
   bool chatBusy = false;
 
@@ -71,17 +75,19 @@ class DataStore extends ChangeNotifier {
     loading = true;
     notifyListeners();
     final results = await Future.wait([
+      api.getContent(),
       api.getEntries(),
       api.getDoctors(),
       api.getMedications(),
       api.getCrisisContacts(),
       api.getChat(),
     ]);
-    entries = results[0] as List<Entry>;
-    doctors = results[1] as List<Doctor>;
-    medications = results[2] as List<Medication>;
-    crisisContacts = results[3] as List<CrisisContact>;
-    chat = results[4] as List<ChatMessage>;
+    content = results[0] as AppContent;
+    entries = results[1] as List<Entry>;
+    doctors = results[2] as List<Doctor>;
+    medications = results[3] as List<Medication>;
+    crisisContacts = results[4] as List<CrisisContact>;
+    chat = results[5] as List<ChatMessage>;
     loading = false;
     notifyListeners();
   }
@@ -166,9 +172,9 @@ class DataStore extends ChangeNotifier {
   }
 
   List<RecentItem> get recent => entries.take(3).map((e) {
-        final meta = stateMeta(e.state);
+        final meta = content.stateMeta(e.state);
         return RecentItem(e.state, meta.color, e.trigger, _formatWhen(e.occurredAt), e.place,
-            e.intensity, intColorFor(e.intensity));
+            e.intensity, content.intColor(e.intensity));
       }).toList();
 
   // --- derived: history -----------------------------------------------------
@@ -186,19 +192,20 @@ class DataStore extends ChangeNotifier {
         DateFormat('EEEEE').format(dt), // narrow weekday (M, T, W…)
         avg == 0 ? '' : avg.toStringAsFixed(0),
         fraction,
-        avg == 0 ? HavenColors.borderWarm : intColorFor(avg),
+        avg == 0 ? HavenColors.borderWarm : content.intColor(avg),
       ));
     }
     return bars;
   }
 
   List<StateDistItem> get stateDist {
-    final counts = {for (final s in kStates) s.code: 0};
+    final states = content.states;
+    final counts = {for (final s in states) s.code: 0};
     for (final e in entries) {
       if (counts.containsKey(e.state)) counts[e.state] = counts[e.state]! + 1;
     }
     final maxC = [1, ...counts.values].reduce((a, b) => a > b ? a : b);
-    return kStates.map((s) => StateDistItem(s, counts[s.code]!, counts[s.code]! / maxC)).toList();
+    return states.map((s) => StateDistItem(s, counts[s.code]!, counts[s.code]! / maxC)).toList();
   }
 
   double _moodAvg(String key) {

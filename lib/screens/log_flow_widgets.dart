@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/constants.dart';
+import '../models/content.dart';
 import '../theme/haven_theme.dart';
 import '../widgets/haven_widgets.dart';
 

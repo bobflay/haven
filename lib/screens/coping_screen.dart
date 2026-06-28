@@ -3,16 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../state/data_store.dart';
 import '../state/nav_state.dart';
 import '../theme/haven_theme.dart';
-
-const _prompts = [
-  'Cravings peak and fade. This one will too.',
-  'Name five things you can see right now.',
-  'You have survived every urge before this one.',
-  'Feel your feet. Feel the chair. You are here.',
-  "You don't have to act. You only have to wait.",
-];
 
 class CopingScreen extends StatefulWidget {
   const CopingScreen({super.key});
@@ -73,9 +66,10 @@ class _CopingScreenState extends State<CopingScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final nav = context.read<NavState>();
+    final prompts = context.read<DataStore>().content.ridePrompts;
     final mm = (timer ~/ 60).toString();
     final ss = (timer % 60).toString().padLeft(2, '0');
-    final prompt = _prompts[((_total - timer) ~/ 24) % _prompts.length];
+    final prompt = prompts[((_total - timer) ~/ 24) % prompts.length];
 
     return Container(
       decoration: const BoxDecoration(

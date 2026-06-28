@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/constants.dart';
+import '../models/content.dart';
+import '../state/data_store.dart';
 import '../state/nav_state.dart';
 import '../theme/haven_theme.dart';
 import '../widgets/fade_up.dart';
@@ -32,6 +33,7 @@ class _WheelScreenState extends State<WheelScreen> {
   _WheelSelection? sel;
 
   void _handleTap(Offset local) {
+    final cores = context.read<DataStore>().content.emotionCores;
     final dx = local.dx - _center.dx;
     final dy = local.dy - _center.dy;
     final r = math.sqrt(dx * dx + dy * dy);
@@ -42,8 +44,8 @@ class _WheelScreenState extends State<WheelScreen> {
     a %= 360;
     if (a < 0) a += 360;
 
-    final coreIndex = (a ~/ 60) % kCores.length;
-    final core = kCores[coreIndex];
+    final coreIndex = (a ~/ 60) % cores.length;
+    final core = cores[coreIndex];
 
     setState(() {
       if (r < rMid) {
@@ -61,6 +63,7 @@ class _WheelScreenState extends State<WheelScreen> {
   @override
   Widget build(BuildContext context) {
     final nav = context.read<NavState>();
+    final cores = context.watch<DataStore>().content.emotionCores;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 64, 20, 108),
@@ -86,7 +89,11 @@ class _WheelScreenState extends State<WheelScreen> {
               onTapDown: (d) => _handleTap(d.localPosition),
               child: CustomPaint(
                 size: const Size(_size, _size),
-                painter: _WheelPainter(activeCore: activeCore, selLabel: sel?.label, selCore: sel?.core),
+                painter: _WheelPainter(
+                    cores: cores,
+                    activeCore: activeCore,
+                    selLabel: sel?.label,
+                    selCore: sel?.core),
               ),
             ),
           ),
@@ -139,7 +146,8 @@ class _WheelScreenState extends State<WheelScreen> {
 }
 
 class _WheelPainter extends CustomPainter {
-  _WheelPainter({this.activeCore, this.selLabel, this.selCore});
+  _WheelPainter({required this.cores, this.activeCore, this.selLabel, this.selCore});
+  final List<EmotionCore> cores;
   final String? activeCore;
   final String? selLabel;
   final String? selCore;
@@ -187,8 +195,8 @@ class _WheelPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..color = cream;
 
-    for (var ci = 0; ci < kCores.length; ci++) {
-      final core = kCores[ci];
+    for (var ci = 0; ci < cores.length; ci++) {
+      final core = cores[ci];
       final a0 = ci * 60.0, a1 = a0 + 60.0, mid = (a0 + a1) / 2;
       final isActive = activeCore == core.key;
 

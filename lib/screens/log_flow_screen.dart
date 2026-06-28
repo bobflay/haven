@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/constants.dart';
+import '../models/content.dart';
 import '../models/models.dart';
 import '../state/data_store.dart';
 import '../state/nav_state.dart';
@@ -45,6 +45,8 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
     note.dispose();
     super.dispose();
   }
+
+  AppContent get _content => context.read<DataStore>().content;
 
   String get _stepKey => _steps[step];
 
@@ -210,16 +212,16 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
       title: 'When is this happening?',
       child: Row(
         children: [
-          for (final p in kPeriods) ...[
+          for (final p in _content.periods) ...[
             Expanded(
               child: BigChoice(
-                big: p,
-                desc: p == 'AM' ? 'Morning hours' : 'Afternoon / night',
-                selected: period == p,
-                onTap: () => setState(() => period = p),
+                big: p.value,
+                desc: p.desc ?? '',
+                selected: period == p.value,
+                onTap: () => setState(() => period = p.value),
               ),
             ),
-            if (p == 'AM') const SizedBox(width: 12),
+            if (p != _content.periods.last) const SizedBox(width: 12),
           ],
         ],
       ),
@@ -227,22 +229,18 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
   }
 
   Widget _placeStep() {
-    final descs = {
-      'Safe-Zone': 'Inside the hospital — supported, contained.',
-      'Unsafe-Zone': 'Outside — more exposure, fewer guardrails.',
-    };
     return _StepShell(
       title: 'Where are you?',
       child: Column(
         children: [
-          for (final p in kPlaces)
+          for (final p in _content.places)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: SelectChip(
-                label: p == 'Safe-Zone' ? 'Safe Zone' : 'Unsafe Zone',
-                desc: descs[p],
-                selected: place == p,
-                onTap: () => setState(() => place = p),
+                label: p.display,
+                desc: p.desc,
+                selected: place == p.value,
+                onTap: () => setState(() => place = p.value),
               ),
             ),
         ],
@@ -256,23 +254,24 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
           selected: state == s.code,
           onTap: () => setState(() => state = s.code),
         );
+    final states = _content.states;
     return _StepShell(
       title: "What's your wiring like?",
       subtitle: "Body and mind don't always move together.",
       // A responsive 2-column grid with equal-height rows.
       child: Column(
         children: [
-          for (var i = 0; i < kStates.length; i += 2)
+          for (var i = 0; i < states.length; i += 2)
             Padding(
-              padding: EdgeInsets.only(bottom: i + 2 < kStates.length ? 11 : 0),
+              padding: EdgeInsets.only(bottom: i + 2 < states.length ? 11 : 0),
               child: IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: card(kStates[i])),
+                    Expanded(child: card(states[i])),
                     const SizedBox(width: 11),
                     Expanded(
-                      child: i + 1 < kStates.length ? card(kStates[i + 1]) : const SizedBox(),
+                      child: i + 1 < states.length ? card(states[i + 1]) : const SizedBox(),
                     ),
                   ],
                 ),
@@ -284,9 +283,7 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
   }
 
   Widget _energyStep() {
-    final label = energy <= 3
-        ? 'Running on empty'
-        : (energy <= 6 ? 'Somewhere in the middle' : 'Buzzing, hard to settle');
+    final label = _content.energyLabel(energy);
     return _StepShell(
       title: "How's your energy?",
       subtitle: 'Drained on the left, electric on the right.',
@@ -310,12 +307,8 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
   }
 
   Widget _intensityStep() {
-    final ic = intColorFor(intensity);
-    final hint = intensity <= 3
-        ? 'A passing thought, easily redirected.'
-        : (intensity <= 6
-            ? 'Persistent — worth actively using a coping skill.'
-            : 'Intense urge. Consider changing your physical environment or reaching out now.');
+    final ic = _content.intColor(intensity);
+    final hint = _content.intensityHint(intensity);
     return _StepShell(
       title: 'How strong is the craving?',
       subtitle: 'No wrong answer — just notice.',
@@ -326,7 +319,7 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(color: ic, borderRadius: BorderRadius.circular(20)),
-            child: Text(intBandFor(intensity),
+            child: Text(_content.intBand(intensity),
                 style: hank(size: 13, weight: FontWeight.w600, color: Colors.white)),
           ),
           const SizedBox(height: 26),
@@ -353,7 +346,7 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
       subtitle: 'Most urges peak and fade within 20–30 minutes.',
       child: Column(
         children: [
-          for (final d in kDurations)
+          for (final d in _content.durations)
             Padding(
               padding: const EdgeInsets.only(bottom: 11),
               child: SelectChip(
@@ -370,23 +363,18 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
   }
 
   Widget _triggerStep() {
-    final descs = {
-      'Physical': 'Fatigue, pain, hunger (HALT).',
-      'Environmental': 'A time of day, a memory, a place, media.',
-      'Emotional': 'Stress, boredom, emptiness, anger.',
-    };
     return _StepShell(
       title: 'What set it off?',
       child: Column(
         children: [
-          for (final t in kTriggers)
+          for (final t in _content.triggers)
             Padding(
               padding: const EdgeInsets.only(bottom: 11),
               child: SelectChip(
-                label: t,
-                desc: descs[t],
-                selected: trigger == t,
-                onTap: () => setState(() => trigger = t),
+                label: t.display,
+                desc: t.desc,
+                selected: trigger == t.value,
+                onTap: () => setState(() => trigger = t.value),
               ),
             ),
           const SizedBox(height: 5),
@@ -403,38 +391,24 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
   }
 
   Widget _emotionsStep() {
-    final groups = [
-      ('High activation', HavenColors.clay, [
-        ('anxiety', 'Anxiety / panic'),
-        ('irritability', 'Irritability / anger'),
-      ]),
-      ('Low activation', HavenColors.dusk, [
-        ('depression', 'Depression / sadness'),
-        ('apathy', 'Apathy / numbness'),
-      ]),
-      ('Grounded', HavenColors.sage, [
-        ('peace', 'Peace / comfort'),
-        ('connection', 'Connection'),
-      ]),
-    ];
     return _StepShell(
       title: "What's present emotionally?",
       subtitle: 'Slide each to where it sits. 1 is barely, 5 is a lot.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: groups.map((g) {
+        children: _content.emotionGroups.map((g) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Eyebrow(g.$1, color: g.$2, size: 11),
+                Eyebrow(g.label, color: g.color, size: 11),
                 const SizedBox(height: 12),
-                ...g.$3.map((m) => MoodSlider(
-                      label: m.$2,
-                      value: mood.byKey(m.$1),
-                      color: g.$2,
-                      onChanged: (v) => setState(() => mood = mood.withKey(m.$1, v)),
+                ...g.items.map((m) => MoodSlider(
+                      label: m.label,
+                      value: mood.byKey(m.key),
+                      color: g.color,
+                      onChanged: (v) => setState(() => mood = mood.withKey(m.key, v)),
                     )),
                 const SizedBox(height: 6),
               ],
@@ -456,7 +430,7 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              for (final h in kSleepHours) ...[
+              for (final h in _content.sleepHours) ...[
                 Expanded(
                   child: SelectChip(
                     label: h,
@@ -469,7 +443,7 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
                     fontSize: 13.5,
                   ),
                 ),
-                if (h != kSleepHours.last) const SizedBox(width: 9),
+                if (h != _content.sleepHours.last) const SizedBox(width: 9),
               ],
             ],
           ),
@@ -495,7 +469,7 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
           Wrap(
             spacing: 9,
             runSpacing: 9,
-            children: kAutopilots.map((a) {
+            children: _content.autopilots.map((a) {
               final on = autopilot.contains(a);
               return PillChip(
                 label: a,
@@ -543,16 +517,12 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
           const SizedBox(height: 24),
           Eyebrow('And the outcome?', size: 12),
           const SizedBox(height: 12),
-          ...[
-            ('De-escalated', 'It helped — the feeling eased'),
-            ('Stayed steady', 'It held steady'),
-            ('Got worse', 'It got more intense'),
-          ].map((o) => Padding(
+          ..._content.outcomes.map((o) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: SelectChip(
-                  label: o.$2,
-                  selected: outcome == o.$1,
-                  onTap: () => setState(() => outcome = o.$1),
+                  label: o.desc ?? o.value,
+                  selected: outcome == o.value,
+                  onTap: () => setState(() => outcome = o.value),
                   radius: 15,
                   bold: true,
                   fontSize: 14.5,
@@ -566,8 +536,8 @@ class _LogFlowScreenState extends State<LogFlowScreen> {
   Widget _savedStep() {
     final rows = [
       ('When', '$period · ${place ?? '—'}'),
-      ('State', stateMeta(state ?? 'RF').label),
-      ('Craving', '$intensity/10 · ${intBandFor(intensity)}'),
+      ('State', _content.stateMeta(state ?? 'RF').label),
+      ('Craving', '$intensity/10 · ${_content.intBand(intensity)}'),
       ('Trigger', trigger ?? '—'),
       ('Outcome', outcome ?? '—'),
     ];

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/constants.dart';
 import '../models/models.dart';
 import '../state/data_store.dart';
 import '../theme/haven_theme.dart';
@@ -359,6 +358,9 @@ class _MedForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final content = context.read<DataStore>().content;
+    final medTimes = content.medTimes;
+    final medForms = content.medForms;
     Widget field(TextEditingController c, String hint, {TextInputType? type}) => Padding(
           padding: const EdgeInsets.only(bottom: 9),
           child: HavenField(
@@ -387,7 +389,7 @@ class _MedForm extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              for (final t in kMedTimes) ...[
+              for (final t in medTimes) ...[
                 Expanded(
                   child: _MiniChip(
                     label: t,
@@ -397,7 +399,7 @@ class _MedForm extends StatelessWidget {
                     selectedText: HavenColors.cream,
                   ),
                 ),
-                if (t != kMedTimes.last) const SizedBox(width: 7),
+                if (t != medTimes.last) const SizedBox(width: 7),
               ],
             ],
           ),
@@ -407,7 +409,7 @@ class _MedForm extends StatelessWidget {
           Wrap(
             spacing: 7,
             runSpacing: 7,
-            children: kMedForms
+            children: medForms
                 .map((f) => _MiniChip(
                       label: f,
                       selected: form == f,

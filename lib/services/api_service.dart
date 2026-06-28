@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../models/content.dart';
 import '../models/models.dart';
 
 class ApiException implements Exception {
@@ -91,6 +92,10 @@ class ApiService {
   Future<void> logout() async {
     await _post('/logout');
   }
+
+  // --- Content (static reference copy + options) ----------------------------
+  Future<AppContent> getContent() async =>
+      AppContent.fromJson((await _get('/content') as Map).cast<String, dynamic>());
 
   // --- Entries --------------------------------------------------------------
   Future<List<Entry>> getEntries() async => _list(await _get('/entries'), Entry.fromJson);
